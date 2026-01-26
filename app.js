@@ -1,4 +1,4 @@
-// ==================== STATE MANAGEMENT ====================
+
 const UI_DELAY = 250;
 const FILTER_DELAY = 200;
 
@@ -12,7 +12,6 @@ let state = {
     demoModeBannerVisible: localStorage.getItem('demoBannerVisible') !== 'false'
 };
 
-// ==================== ANALYTICS TRACKING ====================
 function trackEvent(name, data = {}) {
     const events = JSON.parse(localStorage.getItem('demoAnalytics') || '[]');
     events.push({
@@ -24,9 +23,7 @@ function trackEvent(name, data = {}) {
     console.debug('[Analytics]', name, data);
 }
 
-// ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', () => {
-    // show skeletons while initial content "loads"
     state.loading = true;
     initializeApp();
     setupEventListeners();
@@ -34,29 +31,23 @@ document.addEventListener('DOMContentLoaded', () => {
     loadItemsFromStorage();
     loadCartFromStorage();
 
-    // If location.hash is used (single-page mode), render that page.
     const initialFromHash = (location.hash || '').replace('#', '');
     if (initialFromHash) {
         renderPage(initialFromHash);
 
-        // remove loading after a short moment and re-render real content
         setTimeout(() => {
             state.loading = false;
             renderPage(state.currentPage);
         }, UI_DELAY);
     } else {
-        // multi-page mode: do not override page rendered by the HTML file
         state.loading = false;
     }
 });
 
 function initializeApp() {
-    // Initialize items from localStorage or use seed items
     const savedItems = localStorage.getItem('ecommerceItems');
     state.items = savedItems ? JSON.parse(savedItems) : SEED_ITEMS;
-    // reflect demo admin visibility on body so CSS can hide admin-only controls
     try { document.body.dataset.demoAdmin = state.demoModeBannerVisible ? 'true' : 'false'; } catch (e) {}
-    // don't store derived filteredItems; compute on demand
     renderCarousel();
     if (typeof renderTrustSignals === 'function') renderTrustSignals();
 }
@@ -90,9 +81,7 @@ function renderTrustSignals() {
     if (elCount) elCount.textContent = totalReviews ? (totalReviews.toLocaleString() + '+') : '0';
 }
 
-// ==================== EVENT LISTENERS ====================
 function setupEventListeners() {
-    // Navigation links - only intercept in-page anchors (hash links).
     document.querySelectorAll('.nav-link, [data-page]').forEach(link => {
         link.addEventListener('click', (e) => {
             const href = link.getAttribute('href') || '';
@@ -101,11 +90,9 @@ function setupEventListeners() {
                 const page = link.getAttribute('data-page') || link.textContent.toLowerCase();
                 renderPage(page);
             }
-            // otherwise allow normal navigation to standalone HTML files
         });
     });
 
-    // Mobile nav toggle (hamburger)
     const navToggle = document.getElementById('nav-toggle');
     const navLinksContainer = document.querySelector('.nav-links');
     if (navToggle && navLinksContainer) {
@@ -114,7 +101,6 @@ function setupEventListeners() {
             navToggle.setAttribute('aria-expanded', opened ? 'true' : 'false');
         });
 
-        // Close mobile menu when a nav link is clicked
         navLinksContainer.querySelectorAll('.nav-link').forEach(nl => {
             nl.addEventListener('click', () => {
                 navLinksContainer.classList.remove('open');
@@ -123,10 +109,8 @@ function setupEventListeners() {
         });
     }
 
-    // Theme toggle
     document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 
-    // Demo mode banner close
     const demoBannerClose = document.getElementById('demo-banner-close');
     if (demoBannerClose) {
         demoBannerClose.addEventListener('click', () => {
@@ -139,10 +123,8 @@ function setupEventListeners() {
         });
     }
 
-    // Demo toggle button in header (reopen / toggle banner)
     const demoToggle = document.getElementById('demo-toggle');
     if (demoToggle) {
-        // reflect current state
         demoToggle.setAttribute('aria-pressed', state.demoModeBannerVisible ? 'true' : 'false');
         demoToggle.addEventListener('click', () => {
             state.demoModeBannerVisible = !state.demoModeBannerVisible;
@@ -155,11 +137,9 @@ function setupEventListeners() {
         });
     }
 
-    // Cart button
     const cartBtn = document.getElementById('cart-btn');
     if (cartBtn) cartBtn.addEventListener('click', toggleCart);
 
-    // Cart close button
     const closeCartBtn = document.getElementById('close-cart');
     if (closeCartBtn) closeCartBtn.addEventListener('click', toggleCart);
     
@@ -169,7 +149,6 @@ function setupEventListeners() {
             const cartSidebar = document.getElementById('cart-sidebar');
             if (cartSidebar) cartSidebar.classList.remove('open');
             cartOverlay.classList.remove('active');
-            // also close checkout modal if open
             const checkoutModal = document.getElementById('checkout-modal');
             if (checkoutModal && checkoutModal.classList.contains('active')) {
                 closeModal(checkoutModal);
@@ -177,7 +156,6 @@ function setupEventListeners() {
         });
     }
 
-    // Add item button -> open modal with focus trap
     const addItemBtn = document.getElementById('add-item-btn');
     const addItemsModal = document.getElementById('add-items-modal');
     if (addItemBtn && addItemsModal) {
@@ -189,18 +167,16 @@ function setupEventListeners() {
         closeAddForm.addEventListener('click', () => closeModal(addItemsModal));
     }
 
-    // Checkout button -> open checkout modal (uses same overlay for demo dimming)
     const checkoutBtn = document.getElementById('checkout-btn');
     const checkoutModal = document.getElementById('checkout-modal');
     if (checkoutBtn && checkoutModal) {
         checkoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            // track checkout opened
             trackEvent('checkout_opened', {
                 cartItems: state.cart.length,
                 cartTotal: state.cart.reduce((s, i) => s + i.price * i.cartQuantity, 0).toFixed(2)
             });
-            // populate checkout total before opening modal
+    
             const totalEl = document.getElementById('checkout-total');
             if (totalEl) {
                 const total = state.cart.reduce((s, i) => s + i.price * i.cartQuantity, 0).toFixed(2);
@@ -218,17 +194,14 @@ function setupEventListeners() {
         }
     }
 
-    // Add item form
     const addItemForm = document.getElementById('add-item-form');
     if (addItemForm) addItemForm.addEventListener('submit', handleAddItem);
 
-    // Checkout form -> show success modal
     const checkoutForm = document.getElementById('checkout-form');
     if (checkoutForm) {
         checkoutForm.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            // Recalculate total from latest cart in state
             console.debug('[Checkout] State.cart before calc:', JSON.stringify(state.cart));
             
             let total = 0;
@@ -246,7 +219,6 @@ function setupEventListeners() {
 
             console.log('[Checkout] Calculated Total: $' + total, 'Items:', itemCount);
 
-            // track checkout completed
             trackEvent('checkout_completed', {
                 total: parseFloat(total),
                 items: itemCount,
@@ -258,7 +230,6 @@ function setupEventListeners() {
                 })) : []
             });
 
-            // Update success modal with current cart total
             const successTotalEl = document.getElementById('success-total');
             if (successTotalEl) {
                 successTotalEl.textContent = '$' + total;
@@ -269,7 +240,6 @@ function setupEventListeners() {
                 successIdEl.textContent = Date.now();
             }
 
-            // Save order to localStorage
             const order = {
                 id: Date.now(),
                 items: state.cart.map(i => ({
@@ -285,7 +255,6 @@ function setupEventListeners() {
             orders.push(order);
             localStorage.setItem('ecommerceOrders', JSON.stringify(orders));
 
-            // Reduce inventory
             const products = JSON.parse(localStorage.getItem('ecommerceItems') || '[]');
             order.items.forEach(cartItem => {
                 const product = products.find(p => p.id === cartItem.id);
@@ -294,7 +263,7 @@ function setupEventListeners() {
                 }
             });
             localStorage.setItem('ecommerceItems', JSON.stringify(products));
-            state.items = products; // update state
+            state.items = products;
 
             state.cart = [];
             saveCartToStorage();
@@ -307,32 +276,26 @@ function setupEventListeners() {
         });
     }
 
-    // Continue shopping button
     const continueShopping = document.getElementById('continue-shopping-btn');
     if (continueShopping) {
         continueShopping.addEventListener('click', () => {
             closeModal(document.getElementById('order-success'));
-            // navigate to standalone products page in multi-page mode
             window.location.href = 'products.html';
         });
     }
-
-    // Contact form
+    
     const contactForm = document.getElementById('contact-form');
     if (contactForm) contactForm.addEventListener('submit', handleContactSubmit);
 
-    // Search and filter (debounced)
     const searchInput = document.getElementById('search-input');
     if (searchInput) searchInput.addEventListener('input', debounce(filterItems, 300));
     
     const categoryFilter = document.getElementById('category-filter');
     if (categoryFilter) categoryFilter.addEventListener('change', filterItems);
 
-    // Checkout button
     const checkoutBtnHandler = document.getElementById('checkout-btn');
     if (checkoutBtnHandler) checkoutBtnHandler.addEventListener('click', handleCheckout);
 
-    // Delegate clicks for dynamic buttons instead of inline handlers
     document.addEventListener('click', (e) => {
         const addBtn = e.target.closest('.add-to-cart-btn');
         if (addBtn) {
@@ -385,7 +348,6 @@ function setupEventListeners() {
     });
 }
 
-// ======= Modal focus trap and keyboard support =======
 let _lastActiveElement = null;
 function openModal(modal) {
     if (!modal) return;
@@ -436,7 +398,6 @@ function closeModal(modal) {
     }
 }
 
-// Close cart sidebar with Escape as well
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         const sidebar = document.getElementById('cart-sidebar');
@@ -448,13 +409,11 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// ======= Image fallback handling =======
 function getImageFallbackDataUri() {
     const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><rect width='100%' height='100%' fill='%23f0f0f0'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23999' font-family='Arial' font-size='20'>Image unavailable</text></svg>`;
     return 'data:image/svg+xml;base64,' + btoa(svg);
 }
 
-// capture image load errors and replace with fallback
 document.addEventListener('error', function onError(e) {
     const el = e.target;
     if (el && el.tagName === 'IMG') {
@@ -466,7 +425,6 @@ document.addEventListener('error', function onError(e) {
     }
 }, true);
 
-// ==================== THEME MANAGEMENT ====================
 function toggleTheme() {
     state.theme = state.theme === 'light' ? 'dark' : 'light';
     localStorage.setItem('theme', state.theme);
@@ -495,7 +453,6 @@ function updateThemeToggleButton() {
     btn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
 }
 
-// ==================== SEO META MANAGEMENT ====================
 function updatePageMeta(page) {
     const titles = {
         home: 'ALBARKA STORE | Vanilla JS E-Commerce Demo',
@@ -527,9 +484,7 @@ function updateMetaDescription(content) {
     meta.content = content;
 }
 
-// ==================== STRUCTURED DATA (JSON-LD) ====================
 function injectProductSchema(items) {
-    // Remove old schema if exists
     const old = document.getElementById('product-schema');
     if (old) old.remove();
 
@@ -568,7 +523,6 @@ function injectProductSchema(items) {
     document.head.appendChild(script);
 }
 
-// ==================== PAGE RENDERING ====================
 function renderPage(page) {
     const pages = document.querySelectorAll('.page');
     pages.forEach(p => p.classList.remove('active'));
@@ -581,7 +535,6 @@ function renderPage(page) {
         state.currentPage = page;
     }
 
-    // Update nav active state
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
         if (link.getAttribute('data-page') === page) {
@@ -589,7 +542,6 @@ function renderPage(page) {
         }
     });
 
-    // Update SEO meta
     updatePageMeta(page);
 
     if (page === 'products') {
@@ -602,10 +554,8 @@ function renderPage(page) {
         renderAdminAnalytics();
     }
 
-    // In multi-page mode we rely on normal navigation; don't modify location.hash here.
 }
 
-// ==================== HELPERS ====================
 function getFilteredItems() {
     const searchText = document.getElementById('search-input')?.value.toLowerCase() || '';
     const category = document.getElementById('category-filter')?.value || '';
@@ -629,7 +579,6 @@ function increaseStock(itemId, qty) {
     item.quantity += qty;
 }
 
-// render stars as symbols based on numeric rating (0-5)
 function renderStars(rating) {
     const fullStars = Math.floor(rating);
     const hasHalf = (rating % 1) >= 0.5;
@@ -647,7 +596,6 @@ function renderStars(rating) {
     return out;
 }
 
-// debounce helper
 function debounce(fn, delay = 300) {
     let t;
     return (...args) => {
@@ -656,7 +604,6 @@ function debounce(fn, delay = 300) {
     };
 }
 
-// ======= DOM builders (DocumentFragment usage) =======
 function createItemCard(item) {
     const card = document.createElement('div');
     card.className = 'item-card';
@@ -849,9 +796,6 @@ function createCartItemElement(item) {
     return wrap;
 }
 
-// In multi-page mode we don't use hashchange; standalone pages load their own content.
-
-// ==================== PRODUCTS PAGE ====================
 function renderProducts() {
     const grid = document.getElementById('items-grid');
     if (!grid) return; // Exit if grid doesn't exist on this page
@@ -882,21 +826,18 @@ function renderProducts() {
         }
         return;
     }
-    // Build using DocumentFragment and existing DOM-builder helper
+ 
     const frag = document.createDocumentFragment();
     items.forEach(item => {
         const card = createItemCard(item);
-        // make card keyboard focusable for arrow-key navigation
         card.setAttribute('tabindex', '0');
         card.dataset.id = String(item.id);
         frag.appendChild(card);
     });
     grid.innerHTML = '';
     grid.appendChild(frag);
-    // ensure keyboard nav is wired after DOM is updated
     setupKeyboardNavigation();
-    
-    // inject product schema for SEO
+
     injectProductSchema(items);
 }
 
@@ -904,12 +845,10 @@ function filterItems() {
     const searchText = document.getElementById('search-input')?.value.toLowerCase() || '';
     const category = document.getElementById('category-filter')?.value || '';
 
-    // show skeletons briefly for UX while filtering
     state.loading = true;
     renderProducts();
 
     setTimeout(() => {
-        // no derived state saved; renderProducts will compute filtered items
         state.loading = false;
         renderProducts();
     }, FILTER_DELAY);
@@ -929,12 +868,10 @@ function addToCart(itemId, quantitySource) {
         return;
     }
 
-    // optimistic update: capture snapshots for rollback
     const prevItemQuantity = item.quantity;
     const existingCartItem = state.cart.find(ci => ci.id === itemId);
     const prevCartItemQty = existingCartItem ? existingCartItem.cartQuantity : 0;
 
-    // apply optimistic changes
     const decreased = decreaseStock(itemId, quantity);
     if (!decreased) {
         showNotification('Not enough stock', 'error');
@@ -947,15 +884,12 @@ function addToCart(itemId, quantitySource) {
         state.cart.push({ id: item.id, name: item.name, price: item.price, picture: item.picture, cartQuantity: quantity });
     }
 
-    // update UI immediately
     updateCartUI();
     renderProducts();
 
-    // try persist changes; rollback on failure
     const itemsSaved = saveItemsToStorage();
     const cartSaved = saveCartToStorage();
     if (!itemsSaved || !cartSaved) {
-        // rollback
         const restoredItem = state.items.find(i => i.id === itemId);
         if (restoredItem) restoredItem.quantity = prevItemQuantity;
 
@@ -968,7 +902,6 @@ function addToCart(itemId, quantitySource) {
             }
         }
 
-        // try re-save best-effort
         saveItemsToStorage();
         saveCartToStorage();
         updateCartUI();
@@ -1043,10 +976,9 @@ function handleAddItem(e) {
     if (typeof renderTrustSignals === 'function') renderTrustSignals();
 }
 
-// ==================== CAROUSEL ====================
 function renderCarousel() {
     const carousel = document.getElementById('product-carousel');
-    if (!carousel) return; // Exit if carousel doesn't exist on this page
+    if (!carousel) return;
     const featuredItems = state.items.slice(0, 8);
 
     carousel.innerHTML = featuredItems.map(item => `
@@ -1065,7 +997,6 @@ function renderCarousel() {
     `).join('');
 }
 
-// ==================== ORDERS PAGE ====================
 function renderOrders() {
     const container = document.getElementById('orders-list');
     const raw = localStorage.getItem('ecommerceOrders');
@@ -1107,7 +1038,6 @@ function renderOrders() {
     container.appendChild(frag);
 }
 
-// ==================== ADMIN ANALYTICS ====================
 function renderAdminAnalytics() {
     const orders = JSON.parse(localStorage.getItem('ecommerceOrders') || '[]');
     const events = JSON.parse(localStorage.getItem('demoAnalytics') || '[]');
@@ -1147,8 +1077,6 @@ function renderAdminAnalytics() {
     if (statOrdersEl) statOrdersEl.textContent = filteredOrders.length;
     if (statItemsEl) statItemsEl.textContent = totalItems;
 
-    // Top products (rendered by renderProductChart)
-    // Funnel
     const checkoutOpened = events.filter(e => e.event === 'checkout_opened').length;
     const completed = events.filter(e => e.event === 'checkout_completed').length;
 
@@ -1200,7 +1128,6 @@ function renderOrdersList() {
         </li>
     `).join('');
 
-    // Add event listeners to order buttons
     list.querySelectorAll('.order-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             showOrderDetails(parseInt(btn.dataset.orderId));
@@ -1283,11 +1210,9 @@ function renderProductChart() {
     });
 }
 
-// ==================== KEYBOARD NAVIGATION ====================
-// attach listener once during init; use event delegation to handle any card focus
 function setupKeyboardNavigation() {
     const grid = document.getElementById('items-grid');
-    if (!grid || grid.dataset.keyboardListenerAttached) return; // prevent duplicate listeners
+    if (!grid || grid.dataset.keyboardListenerAttached) return;
 
     grid.dataset.keyboardListenerAttached = 'true';
     grid.addEventListener('keydown', (e) => {
@@ -1319,14 +1244,12 @@ function setupKeyboardNavigation() {
     });
 }
 
-// ==================== CART MANAGEMENT ====================
 function toggleCart() {
     const cartModal = document.getElementById('cart-modal');
     if (!cartModal) return; // No cart modal on this page
     
     const isOpen = cartModal.classList.contains('active');
     if (!isOpen) {
-        // Opening cart - update UI first
         updateCartUI();
     }
     cartModal.classList.toggle('active');
@@ -1334,12 +1257,11 @@ function toggleCart() {
 
 function updateCartUI() {
     const cartCount = document.getElementById('cart-count');
-    if (!cartCount) return; // Exit if cart elements don't exist on this page
+    if (!cartCount) return;
     
     const totalCount = state.cart.reduce((sum, item) => sum + item.cartQuantity, 0);
     cartCount.textContent = totalCount;
 
-    // Update cart items display in modal
     const cartItems = document.getElementById('cart-items');
     const cartSummary = document.querySelector('.cart-summary');
     const checkoutBtn = document.getElementById('checkout-btn');
@@ -1421,7 +1343,6 @@ function updateCartQuantity(itemId, change) {
         const itemsSaved = saveItemsToStorage();
         const cartSaved = saveCartToStorage();
         if (!itemsSaved || !cartSaved) {
-            // rollback
             const restoredItem = state.items.find(i => i.id === itemId);
             if (restoredItem && typeof prevItemQuantity !== 'undefined') restoredItem.quantity = prevItemQuantity;
             cartItem.cartQuantity = prevCartQuantity;
@@ -1484,7 +1405,6 @@ function handleCheckout() {
     renderProducts();
 }
 
-// ==================== CONTACT FORM ====================
 function handleContactSubmit(e) {
     e.preventDefault();
     
@@ -1504,7 +1424,6 @@ function handleContactSubmit(e) {
     showNotification('Message sent successfully! We will contact you soon.', 'success');
 }
 
-// ==================== NOTIFICATIONS ====================
 function showNotification(message, type = 'info') {
     const container = document.getElementById('notifications-container');
     const notification = document.createElement('div');
@@ -1523,7 +1442,6 @@ function showNotification(message, type = 'info') {
     }, 4000);
 }
 
-// ==================== STORAGE ====================
 function saveItemsToStorage() {
     try {
         localStorage.setItem('ecommerceItems', JSON.stringify(state.items));
@@ -1541,7 +1459,6 @@ function loadItemsFromStorage() {
     if (saved) {
         try {
             const parsed = JSON.parse(saved);
-            // Backfill ratings from SEED_ITEMS for older installs
             const merged = parsed.map(si => {
                 if (typeof si.rating === 'undefined' || typeof si.reviewCount === 'undefined') {
                     const seed = (typeof SEED_ITEMS !== 'undefined' && Array.isArray(SEED_ITEMS)) ? SEED_ITEMS.find(s => s.id === si.id) : undefined;
@@ -1553,7 +1470,6 @@ function loadItemsFromStorage() {
                 return si;
             });
             state.items = merged;
-            // persist merged items so future loads have ratings
             try { localStorage.setItem('ecommerceItems', JSON.stringify(state.items)); } catch (e) { /* best-effort */ }
         } catch (e) {
             // fallback to seeds if parse fails
@@ -1581,11 +1497,9 @@ function loadCartFromStorage() {
     }
 }
 
-// Initialize on load
 window.addEventListener('load', () => {
     updateCartUI();
     setupKeyboardNavigation();
-    // In multi-page mode render the page-specific content when present
     if (document.getElementById('items-grid')) renderProducts();
     if (document.getElementById('orders-list')) renderOrders();
     if (document.getElementById('product-carousel')) renderCarousel();
