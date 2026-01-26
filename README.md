@@ -1,12 +1,12 @@
-# 🛒 Vanilla JS E-Commerce Demo
+🛒 Vanilla JS E-Commerce Demo
 
-A fully functional front-end e-commerce website built with HTML, CSS, and vanilla JavaScript. THere is also a full React version.
+A fully functional front-end e-commerce website built with HTML, CSS, and vanilla JavaScript. There is also a full React version.
 
 This project demonstrates how a modern, performant, and accessible online store can be built without heavy frameworks, making it ideal for small businesses, freelancers, and lightweight deployments.
 
-## ✨ FEATURES
+✨ FEATURES
 
-### 🛍️ Storefront
+🛍️ Storefront
 
 - Product listing with search and category filtering
 - Featured products carousel
@@ -14,21 +14,21 @@ This project demonstrates how a modern, performant, and accessible online store 
 - Dark / light mode toggle (persistent)
 - Responsive, mobile-first layout
 
-### 🛒 Cart & Checkout
+🛒 Cart & Checkout
 
 - Add and remove items from cart
 - Quantity controls with live stock updates
 - Persistent cart using localStorage
 - Simple checkout flow (demo)
 
-### 📊 Admin & Analytics
+📊 Admin & Analytics
 
 - Sales tracking (orders, revenue, quantities)
 - Product performance insights
 - Inventory updates in real time
 - Local admin-style data persistence (no backend required for this demo)
 
-### ♿ Accessibility & UX
+♿ Accessibility & UX
 
 - Semantic HTML structure
 - Keyboard navigation support
@@ -36,7 +36,7 @@ This project demonstrates how a modern, performant, and accessible online store 
 - ARIA labels where appropriate
 - Skeleton loaders for better perceived performance
 
-### ⚡ Performance-Focused
+⚡ Performance-Focused
 
 - Minimal JavaScript, no frameworks
 - Low CSS selector specificity for scalability
@@ -44,7 +44,7 @@ This project demonstrates how a modern, performant, and accessible online store 
 - Graceful image fallbacks
 - Fast load times suitable for low-end devices
 
-## 🎯 Project Goals
+🎯 Project Goals
 
 This project was created to:
 
@@ -53,7 +53,7 @@ This project was created to:
 - Emphasize performance, accessibility, and UX
 - Serve as a freelance-ready storefront template for small businesses
 
-## 🧰 Tech Stack
+🧰 Tech Stack
 
 - HTML5 – semantic, accessible markup
 - CSS3 – responsive design, dark mode, modern layout techniques
@@ -62,7 +62,7 @@ This project was created to:
 
 No external frameworks or libraries required.
 
-## 📱 Responsive Design
+📱 Responsive Design
 
 The site is fully responsive and optimized for:
 
@@ -72,15 +72,15 @@ The site is fully responsive and optimized for:
 
 Checkout and cart interactions are designed to be comfortable on touch devices.
 
-## 📝 Notes
+📝 Notes
 
 - This is a front-end demo — no backend or payment gateway is connected
 - Data persists locally for demonstration purposes
 - The structure is intentionally simple and extensible for future backend integration
 
-## 👤 Author
+👤 Author
 
-Built Wujdi Adam a front-end developer focused on:
+Built by Wujdi Adam a front-end developer focused on:
 
 - Practical UX
 - Performance-first design
